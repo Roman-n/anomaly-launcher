@@ -1,0 +1,2 @@
+-smap2048
+-no_prefetch

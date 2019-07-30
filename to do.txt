@@ -1,0 +1,16 @@
+#
+#!! si no encuentra un user.ltx para actualizar los datos de Options, salta un cartelito avisando que crea uno nuevo
+#
+# use some of the UI elements from anomaly in the textures\ui folder
+#
+#
+#!!!!!!!!!!! mover los inits de frames a distintas funciones
+#V2:
+#- añadir pestaña de graphics
+#- añadir Tips en algun lado
+#- permitir cambios de themes
+#- sonidito cuando highlightean un boton, y cuando clickean (los de frame_buttons)
+#- permitir traducciones (que lea dinamicamente de un archivo de te|xto)
+#- checkear que esté to.do lo necesario en el user.ltx (comparandolo con el default)
+#CODE CLEANUP!!!!
+#
