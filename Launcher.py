@@ -1,13 +1,13 @@
 from sys import argv, exit
+import subprocess
 import webbrowser
-from os import getcwd, popen, path, remove
+from os import getcwd, popen, path, remove, startfile
 import re
 import shutil
 from PyQt5.QtWidgets import (QWidget, QDesktopWidget, QGridLayout, QApplication, QPushButton, QMainWindow, QFrame,
                              QLabel, QComboBox, QCheckBox, QAbstractButton)
 from PyQt5.QtGui import QPalette, QImage, QBrush, QIcon, QPixmap, QPainter
 from PyQt5.QtCore import Qt, QSize
-LAUNCHER_DIRECTORY = getcwd()
 
 
 class HoverButton(QPushButton):
@@ -59,6 +59,7 @@ class Launcher(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.LAUNCHER_DIRECTORY = getcwd()
         self.initUI()
 
     def keyPressEvent(self, e):
@@ -66,10 +67,12 @@ class Launcher(QMainWindow):
             self.close()
         elif e.key() == Qt.Key_Return:
             self.launchGame()
+        elif e.key() == Qt.Key_F5:
+            self.deleteShadersCache()
 
     def initBG(self):
         # Background
-        img_bg = QImage(LAUNCHER_DIRECTORY + "\\launcher\\bg.png")
+        img_bg = QImage(self.LAUNCHER_DIRECTORY + "\\launcher\\bg.png")
         palette_bg = QPalette()
         palette_bg.setBrush(10, QBrush(img_bg))  # 10 = Windowrole
         self.setPalette(palette_bg)
@@ -96,27 +99,27 @@ class Launcher(QMainWindow):
     def initSocMediaButtons(self):
         # Social media buttons/icons
         btn_moddb = QPushButton('')  # MODDB's Anomaly page
-        icon_moddb = QIcon(LAUNCHER_DIRECTORY + '\\launcher\\moddb.png')
+        icon_moddb = QIcon(self.LAUNCHER_DIRECTORY + '\\launcher\\moddb.png')
         btn_moddb.setIconSize(QSize(80, 40))
         btn_moddb.setIcon(icon_moddb)
         btn_moddb.clicked.connect(lambda: webbrowser.open('https://www.moddb.com/mods/stalker-anomaly'))
         btn_discord = QPushButton('')  # Discord's link
-        icon_discord = QIcon(LAUNCHER_DIRECTORY + '\\launcher\\discord.png')
+        icon_discord = QIcon(self.LAUNCHER_DIRECTORY + '\\launcher\\discord.png')
         btn_discord.setIconSize(QSize(40, 40))
         btn_discord.setIcon(icon_discord)
         btn_discord.clicked.connect(lambda: webbrowser.open('https://discord.gg/DQ8M2GB'))
         btn_vk = QPushButton('')  # VK site
-        icon_vk = QIcon(LAUNCHER_DIRECTORY + '\\launcher\\vk.png')
+        icon_vk = QIcon(self.LAUNCHER_DIRECTORY + '\\launcher\\vk.png')
         btn_vk.setIconSize(QSize(40, 40))
         btn_vk.setIcon(icon_vk)
         btn_vk.clicked.connect(lambda: webbrowser.open('https://vk.com/anomaly_mod'))
         btn_fb = QPushButton('')  # Facebook site
-        icon_fb = QIcon(LAUNCHER_DIRECTORY + '\\launcher\\fb.png')
+        icon_fb = QIcon(self.LAUNCHER_DIRECTORY + '\\launcher\\fb.png')
         btn_fb.setIconSize(QSize(40, 40))
         btn_fb.setIcon(icon_fb)
         btn_fb.clicked.connect(lambda: webbrowser.open('https://www.facebook.com/Stalker-Anomaly-2355538658067205/'))
         btn_pda = QPushButton('')  # goto appdata for logs
-        icon_pda = QIcon(LAUNCHER_DIRECTORY + '\\launcher\\pda.png')
+        icon_pda = QIcon(self.LAUNCHER_DIRECTORY + '\\launcher\\pda.png')
         btn_pda.setIconSize(QSize(40, 40))
         btn_pda.setIcon(icon_pda)
         btn_pda.clicked.connect(lambda: self.openLogsFolder())
@@ -132,24 +135,24 @@ class Launcher(QMainWindow):
         grid_media.addWidget(btn_moddb, 0, 4)
         grid_media.setColumnStretch(4, 5)
 
-    def initOptionsMenu(self, f_ud, f_cd):
+    def initOptionsMenu(self, f_ud, f_cd, f_ld):
 
         # Creating the options menu
         self.frame_options = QFrame(self)
         self.frame_options.setGeometry(55, 40, 541, 413)
         self.frame_options.setStyleSheet('color: white')
         label_bg = QLabel(self.frame_options)
-        pixmap_options = QPixmap(LAUNCHER_DIRECTORY + '\\launcher\\options2.png')
+        pixmap_options = QPixmap(self.LAUNCHER_DIRECTORY + '\\launcher\\options2.png')
         label_bg.setPixmap(pixmap_options)
         self.frame_options.hide()
         # Save button
-        icon_save_def = QPixmap(LAUNCHER_DIRECTORY + '\\launcher\\save_def.png')
-        icon_save_highlighted = QPixmap(LAUNCHER_DIRECTORY + '\\launcher\\save_high.png')
-        icon_save_pressed = QPixmap(LAUNCHER_DIRECTORY + '\\launcher\\save_press.png')
+        icon_save_def = QPixmap(self.LAUNCHER_DIRECTORY + '\\launcher\\save_def.png')
+        icon_save_highlighted = QPixmap(self.LAUNCHER_DIRECTORY + '\\launcher\\save_high.png')
+        icon_save_pressed = QPixmap(self.LAUNCHER_DIRECTORY + '\\launcher\\save_press.png')
         btn_savechanges = PicButton(icon_save_def, icon_save_highlighted, icon_save_pressed)
         btn_savechanges.setParent(self.frame_options)
-        btn_savechanges.clicked.connect(lambda: self.saveCurrentSettings(ref_arr, arr_options_array, f_ud, f_cd))
-        btn_savechanges.setGeometry(370, 360, 133, 25)
+        btn_savechanges.clicked.connect(lambda: self.saveCurrentSettings(ref_arr, arr_options_array, f_ud, f_cd, f_ld))
+        btn_savechanges.setGeometry(380, 370, 133, 25)
 
         # Sub menus bar, General and Graphics should be updated to PicButton for v2.
         # Currently, those 2 buttons are part of the background 'options2.png'
@@ -163,6 +166,13 @@ class Launcher(QMainWindow):
         grid_categories = QGridLayout(frame_categories)
         grid_categories.addWidget(btn_general_options, 0, 0)
         grid_categories.addWidget(btn_graphics_options, 0, 1)
+
+        # Tips frame
+        frame_tips = QFrame(self.frame_options)
+        frame_tips.setGeometry(10, 392, 400, 50)
+        label_tip = SettingsLabel('Save before launching the game to apply changes.')
+        label_tip.setStyleSheet('color:grey; font: 12px Arial')
+        label_tip.setParent(frame_tips)
 
         # Settings frame
         frame_settings = QFrame(self.frame_options)
@@ -196,9 +206,8 @@ class Launcher(QMainWindow):
         label_renderer = SettingsLabel('Renderer')
         dropdwnmenu_renderer = QComboBox(frame_settings)
         dropdwnmenu_renderer.setStyleSheet("background-color: #313031; color: white")
-        dropdwnmenu_renderer.addItem("DirectX 8 (Basic)")
-        dropdwnmenu_renderer.addItem("DirectX 9 (Basic)")
-        dropdwnmenu_renderer.addItem("DirectX 9 (Enhanced)")
+        dropdwnmenu_renderer.addItem("DirectX 8")
+        dropdwnmenu_renderer.addItem("DirectX 9")
         dropdwnmenu_renderer.addItem("DirectX 10")
         dropdwnmenu_renderer.addItem("DirectX 11")
         label_shadowmaps = SettingsLabel('Shadowmaps')
@@ -218,9 +227,10 @@ class Launcher(QMainWindow):
         chkbox_noprefetch = QCheckBox(frame_settings)
         label_discordrpc = SettingsLabel('Discord Rich Presence')
         chkbox_discordrpc = QCheckBox(frame_settings)
-
-        label_tip = SettingsLabel('Hold mouse over each option to see what they do.')
-        label_tip.setStyleSheet('color:grey; font: 12px Arial')
+        label_avx = SettingsLabel('Support for AVX CPU')
+        chkbox_avx = QCheckBox(frame_settings)
+        label_wipecache = SettingsLabel('Delete Shaders Cache')
+        chkbox_wipecache = QCheckBox(frame_settings)
 
         # Putting the labels+boxes in the grid
         grid_settings.addWidget(label_resolution, 0, 0)
@@ -239,12 +249,16 @@ class Launcher(QMainWindow):
         grid_settings.addWidget(chkbox_noprefetch, 6, 1)
         grid_settings.addWidget(label_discordrpc, 7, 0)
         grid_settings.addWidget(chkbox_discordrpc, 7, 1)
+        grid_settings.addWidget(label_avx, 8, 0)
+        grid_settings.addWidget(chkbox_avx, 8, 1)
+        grid_settings.addWidget(label_wipecache, 9, 0)
+        grid_settings.addWidget(chkbox_wipecache, 9, 1)
 
         # Setting up options references.
         arr_vid_mode = ['800x600', '832x624', '1024x768', '1280x720', '1280x768', '1280x800', '1280x960',
                         '1280x1024', '1360x768', '1360x1024', '1366x768', '1440x900', '1600x900', '1680x1050',
                         '1920x1080']
-        arr_rndr = ["renderer_r1", "renderer_r2", "renderer_r2.5", "renderer_r3", "renderer_r4"]
+        arr_rndr = ["renderer_r1", "renderer_r2", "renderer_r3", "renderer_r4"]
         arr_smaps = ["-smap1024", "-smap1536", "-smap2048", "-smap4096",
                      "-smap8192"]  # I could rip the number off the rest of the string, but that would just take processing time to save a tiny bit of memory.
         arr_options_array = [arr_vid_mode, arr_rndr, arr_smaps]
@@ -252,9 +266,9 @@ class Launcher(QMainWindow):
         # Array with references to the menus and checkboxes to be updated/saved.
         ref_arr = [dropdwnmenu_resolution, dropdwnmenu_fullscreen, dropdwnmenu_renderer,
                    dropdwnmenu_shadowmaps, chkbox_debug, chkbox_sndprefetch, chkbox_noprefetch,
-                   chkbox_discordrpc]
+                   chkbox_discordrpc, chkbox_avx, chkbox_wipecache]
 
-        self.updateOptions(ref_arr, arr_options_array, f_ud, f_cd)
+        self.updateOptions(ref_arr, arr_options_array, f_ud, f_cd, f_ld)
 
     def openSettingsFile(self, path_file, path_backup):
 
@@ -265,7 +279,7 @@ class Launcher(QMainWindow):
         file.close()
         return file_data
 
-    def saveCurrentSettings(self, reference_array, array_options, file_user_data, file_commandline_data):
+    def saveCurrentSettings(self, reference_array, array_options, file_user_data, file_commandline_data, file_launcher_data):
 
         index_res = reference_array[0].currentIndex()
         repl_res = array_options[0][index_res]
@@ -322,22 +336,38 @@ class Launcher(QMainWindow):
         elif not reference_array[7].isChecked():
             file_user_data = re.sub('discord_status \d', 'discord_status 0', file_user_data)
 
+        if reference_array[8].isChecked():  # avx support
+            file_launcher_data = re.sub('avx_support \d', 'avx_support 1', file_launcher_data)
+        elif not reference_array[8].isChecked():
+            file_launcher_data = re.sub('avx_support \d', 'avx_support 0', file_launcher_data)
+
+        if reference_array[9].isChecked():  # wipe shaders cache
+            file_launcher_data = re.sub('wipe_shaders \d', 'wipe_shaders 1', file_launcher_data)
+        elif not reference_array[9].isChecked():
+            file_launcher_data = re.sub('wipe_shaders \d', 'wipe_shaders 0', file_launcher_data)
 
         # delete user.ltx to create a new one
-        if path.exists(LAUNCHER_DIRECTORY + '\\appdata\\user.ltx'):
-            remove(LAUNCHER_DIRECTORY + '\\appdata\\user.ltx')
-        file_tosave_user = open(LAUNCHER_DIRECTORY + '\\appdata\\user.ltx', 'w')
+        if path.exists(self.LAUNCHER_DIRECTORY + '\\appdata\\user.ltx'):
+            remove(self.LAUNCHER_DIRECTORY + '\\appdata\\user.ltx')
+        file_tosave_user = open(self.LAUNCHER_DIRECTORY + '\\appdata\\user.ltx', 'w')
         file_tosave_user.write(file_user_data)
         file_tosave_user.close()
 
         # delete commandline.txt to create a new one
-        if path.exists(LAUNCHER_DIRECTORY + '\\commandline.txt'):
-            remove(LAUNCHER_DIRECTORY + '\\commandline.txt')
-        file_tosave_commandline = open(LAUNCHER_DIRECTORY + '\\commandline.txt', 'w')
+        if path.exists(self.LAUNCHER_DIRECTORY + '\\commandline.txt'):
+            remove(self.LAUNCHER_DIRECTORY + '\\commandline.txt')
+        file_tosave_commandline = open(self.LAUNCHER_DIRECTORY + '\\commandline.txt', 'w')
         file_tosave_commandline.write(file_commandline_data)
         file_tosave_commandline.close()
 
-    def updateOptions(self, reference_array, options_array, file_user_data, file_commandline_data):
+        # delete launcher_data.txt to create a new one
+        if path.exists(self.LAUNCHER_DIRECTORY + '\\launcher_data.txt'):
+            remove(self.LAUNCHER_DIRECTORY + '\\launcher_data.txt')
+        file_tosave_launcher_data = open(self.LAUNCHER_DIRECTORY + '\\launcher_data.txt', 'w')
+        file_tosave_launcher_data.write(file_launcher_data)
+        file_tosave_launcher_data.close()
+
+    def updateOptions(self, reference_array, options_array, file_user_data, file_commandline_data, file_launcher_data):
 
         # reading user.ltx -> resolution, putting user's settings by default
         matchobj_resolution = re.search('vid_mode \d{2}\d*x\d{2}\d*', file_user_data)  # vid_mode 1366x768
@@ -389,6 +419,21 @@ class Launcher(QMainWindow):
         else:
             reference_array[7].setChecked(True)
 
+        # check if AVX setting is on or off
+        matchobj_avx = re.search('avx_support \d', file_launcher_data)  # avx
+        line_avx = matchobj_avx.group().split(" ")[1]
+        if line_avx == '0':
+            reference_array[8].setChecked(False)
+        else:
+            reference_array[8].setChecked(True)
+
+        matchobj_wipecache = re.search('wipe_shaders \d', file_launcher_data)  # wipe shaders cache
+        line_wipecache = matchobj_wipecache.group().split(" ")[1]
+        if line_wipecache == '0':
+            reference_array[9].setChecked(False)
+        else:
+            reference_array[9].setChecked(True)
+
     def loadCommandlineSetting(self, data_commline, ref_arr, lookfor):
         matchobj = re.search(lookfor, data_commline)  # -dbg
         if type(matchobj) is re.Match:
@@ -407,10 +452,38 @@ class Launcher(QMainWindow):
             frame.show()
 
     def openLogsFolder(self):
-        popen('start explorer "%s" ' % LAUNCHER_DIRECTORY + '\\appdata')
+        popen('start explorer "%s" ' % self.LAUNCHER_DIRECTORY + '\\appdata')
 
     def launchGame(self):
-        popen('start explorer "%s" ' % LAUNCHER_DIRECTORY + '\\bin\\xrEngine.exe')
+        file_user_data = self.openSettingsFile(self.LAUNCHER_DIRECTORY + '\\appdata\\user.ltx',
+                                               self.LAUNCHER_DIRECTORY + '\\launcher\\user_backup.ltx')
+
+        file_launcher_data = self.openSettingsFile(self.LAUNCHER_DIRECTORY + '\\launcher_data.txt',
+                                                   self.LAUNCHER_DIRECTORY + '\\launcher\\launcher_data_backup.txt')
+
+        matchobj_renderer = re.search('renderer \w+\d.*\d*', file_user_data) # renderer
+        line_renderer = matchobj_renderer.group().split(" ")[1]
+        matchobj_avx = re.search('avx_support \d', file_launcher_data)  # avx
+        line_avx = matchobj_avx.group().split(" ")[1]
+        matchobj_wipecache = re.search('wipe_shaders \d', file_launcher_data)  # wipe shaders cache
+        line_wipecache = matchobj_wipecache.group().split(" ")[1]
+
+        if line_renderer == 'renderer_r1':
+            target = self.LAUNCHER_DIRECTORY + '\\bin\\AnomalyDX8'
+        elif line_renderer == 'renderer_r2':
+            target = self.LAUNCHER_DIRECTORY + '\\bin\\AnomalyDX9'
+        elif line_renderer == 'renderer_r3':
+            target = self.LAUNCHER_DIRECTORY + '\\bin\\AnomalyDX10'
+        else:
+            target = self.LAUNCHER_DIRECTORY + '\\bin\\AnomalyDX11'
+
+        if line_avx == '1':
+            target += 'AVX'
+
+        if line_wipecache == '1':
+            self.deleteShadersCache()
+
+        startfile(target)
 
     def loadUserLTXSetting(self, arr, opt, match):
         index = 0
@@ -420,8 +493,12 @@ class Launcher(QMainWindow):
                 index += len(arr)
             index += 1
 
-    def center(self):
+    def deleteShadersCache(self):
+        path_dir = self.LAUNCHER_DIRECTORY + '\\appdata\\shaders_cache'
+        if path.exists(path_dir) and path.isdir(path_dir):
+            shutil.rmtree(path_dir)
 
+    def center(self):
         window_space = self.frameGeometry()
         screen_center = QDesktopWidget().availableGeometry().center()
         window_space.moveCenter(screen_center)
@@ -431,21 +508,24 @@ class Launcher(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)     # borderless mode
         self.setGeometry(0, 0, 962, 493)    # set the size of the Launchers window to fit the image size
 
-        file_user_data = self.openSettingsFile(LAUNCHER_DIRECTORY + '\\appdata\\user.ltx',
-                                               LAUNCHER_DIRECTORY + '\\launcher\\user_backup.ltx')
+        file_user_data = self.openSettingsFile(self.LAUNCHER_DIRECTORY + '\\appdata\\user.ltx',
+                                               self.LAUNCHER_DIRECTORY + '\\launcher\\user_backup.ltx')
 
-        file_commandline_data = self.openSettingsFile(LAUNCHER_DIRECTORY + '\\commandline.txt',
-                                                      LAUNCHER_DIRECTORY + '\\launcher\\commandline_backup.txt')
+        file_commandline_data = self.openSettingsFile(self.LAUNCHER_DIRECTORY + '\\commandline.txt',
+                                                      self.LAUNCHER_DIRECTORY + '\\launcher\\commandline_backup.txt')
+
+        file_launcher_data = self.openSettingsFile(self.LAUNCHER_DIRECTORY + '\\launcher_data.txt',
+                                                      self.LAUNCHER_DIRECTORY + '\\launcher\\launcher_data_backup.txt')
 
         self.initBG()
         self.initMainButtons()
         self.initSocMediaButtons()
-        self.initOptionsMenu(file_user_data, file_commandline_data)
+        self.initOptionsMenu(file_user_data, file_commandline_data, file_launcher_data)
         self.center()
         self.show()
 
 
-# Corre la aplicacion
+# Runs app
 if __name__ == '__main__':
     app = QApplication(argv)
     launcher = Launcher()
